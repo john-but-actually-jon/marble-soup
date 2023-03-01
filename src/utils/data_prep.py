@@ -32,6 +32,8 @@ class DataPreprocesser:
             "atomic_numbers",
             "smiles",
         ]  # Columns consistent across all conformations
+        self.atom_num_map = {8:"O", 6: "C", 1:"H"}
+
 
     def __call__(self):
         self.validate()
@@ -114,8 +116,8 @@ class DataPreprocesser:
 
 
 if __name__ == "__main__":
-    in_path = Path(__file__).parent.parent.parent / "data" / "OCH.h5"
-    out_path = Path(__file__).parent.parent.parent / "data" / "OCH_ext_test1.h5"
+    in_path = Path(__file__).parent.parent.parent / "data" / "raw" / "OCH.h5"
+    out_path = Path(__file__).parent.parent.parent / "data" / "processed" / "OCH_ext_test1.h5"
 
     etl = DataPreprocesser(in_path, out_path, chunksize=1000)
 
