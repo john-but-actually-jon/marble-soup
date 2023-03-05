@@ -1,10 +1,13 @@
 from pathlib import Path
 from click import confirm
 import sys
-
+import numpy as np
 
 from h5py import File
 import pandas as pd
+import ase
+from ase.neighborlist import neighbor_list
+
 
 from progbar import ProgBar
 
@@ -33,7 +36,9 @@ class DataPreprocesser:
             "smiles",
         ]  # Columns consistent across all conformations
         self.atom_num_map = {8:"O", 6: "C", 1:"H"}
-
+        self.params = { #TODO: Implement this in a dtoenv file
+            "cutoff_r": 2.5
+        }
 
     def __call__(self):
         self.validate()
@@ -73,11 +78,14 @@ class DataPreprocesser:
                 inds.append(f"{mol}/{i}")
         return (cols, inds)
 
-    def interatomic_distances(self, conformation):
+    def interatomic_distances(self, conformation: np.ndarray) -> np.ndarray:
         """ 
-        Take the 3D conformation and convert to pairwise displacements for each atom
+        Take the 3D conformation and convert to pairwise displacements for each atom. 
+        Return the double indices of atoms
         """
-        pass
+        _a = ase.Atoms(positions=conformation, pbc=True)
+        i, j, d = neighbor_list("ijd", _a, cutoff=self.params["cutoff_r"])
+        return (np.array(list(zip(i, j))), d)
 
     def one_hot_pairwise(self, atomic_numbers):
         pass
@@ -120,5 +128,6 @@ if __name__ == "__main__":
     out_path = Path(__file__).parent.parent.parent / "data" / "processed" / "OCH_ext_test1.h5"
 
     etl = DataPreprocesser(in_path, out_path, chunksize=1000)
-
-    etl()
+    # etl()
+    df = pd.read_hdf(out_path, "chunk_0")
+    print(etl.interatomic_distances(df.iloc[0].conformations))
